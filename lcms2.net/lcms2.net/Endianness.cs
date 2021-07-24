@@ -1,5 +1,6 @@
 ﻿
 using System;
+using System.Buffers.Binary;
 using System.Runtime.CompilerServices;
 
 namespace lcms2dotnet
@@ -55,9 +56,9 @@ namespace lcms2dotnet
                 LittleEndSingle = SameEndianness;
                 LittleEndHalf = SameEndianness;
 
-                BigEndULong = SwapEndianness;
-                BigEndUInt = SwapEndianness;
-                BigEndUShort = SwapEndianness;
+                BigEndULong = BinaryPrimitives.ReverseEndianness;
+                BigEndUInt = BinaryPrimitives.ReverseEndianness;
+                BigEndUShort = BinaryPrimitives.ReverseEndianness;
                 BigEndDouble = SwapEndianness;
                 BigEndSingle = SwapEndianness;
                 BigEndHalf = SwapEndianness;
@@ -71,35 +72,24 @@ namespace lcms2dotnet
                 BigEndSingle = SameEndianness;
                 BigEndHalf = SameEndianness;
 
-                LittleEndULong = SwapEndianness;
-                LittleEndUInt = SwapEndianness;
-                LittleEndUShort = SwapEndianness;
+                LittleEndULong = BinaryPrimitives.ReverseEndianness;
+                LittleEndUInt = BinaryPrimitives.ReverseEndianness;
+                LittleEndUShort = BinaryPrimitives.ReverseEndianness;
                 LittleEndDouble = SwapEndianness;
                 LittleEndSingle = SwapEndianness;
                 LittleEndHalf = SwapEndianness;
             }
         }
 
-        private static ulong SwapEndianness(ulong value) =>
-            ((value & 0xff00000000000000) >> 56) | ((value & 0x00ff000000000000) >> 48) | ((value & 0x0000ff0000000000) >> 40) | ((value & 0x000000ff00000000) >> 32) | ((value & 0x00000000ff000000) >> 24) | ((value & 0x0000000000ff0000) >> 16) | ((value & 0x000000000000ff00) >> 8) | (value & 0x00000000000000ff);
-        private static ulong SameEndianness(ulong value) => value;
-        private static uint SwapEndianness(uint value) =>
-            ((value & 0xff000000) >> 24) | ((value & 0x00ff0000) >> 16) | ((value & 0x0000ff00) >> 8) | (value & 0x000000ff);
-        private static uint SameEndianness(uint value) => value;
-        private static ushort SwapEndianness(ushort value) =>
-            (ushort)(((value & 0xff00u) >> 8) | (value & 0x00ffu));
-        private static ushort SameEndianness(ushort value) => value;
+        private static T SameEndianness<T>(T value) => value;
         private static double SwapEndianness(double value) =>
-            BitConverter.Int64BitsToDouble((long)SwapEndianness((ulong)BitConverter.DoubleToInt64Bits(value)));
-        private static double SameEndianness(double value) => value;
+            BinaryPrimitives.ReadDoubleBigEndian(BitConverter.GetBytes(value));
         private static float SwapEndianness(float value) =>
-            BitConverter.Int32BitsToSingle((int)SwapEndianness((uint)BitConverter.SingleToInt32Bits(value)));
-        private static float SameEndianness(float value) => value;
+            BinaryPrimitives.ReadSingleBigEndian(BitConverter.GetBytes(value));
         private static Half SwapEndianness(Half value)
         {
-            var temp = SwapEndianness(Unsafe.As<Half, ushort>(ref value));
+            var temp = BinaryPrimitives.ReverseEndianness(Unsafe.As<Half, ushort>(ref value));
             return Unsafe.As<ushort, Half>(ref temp);
         }
-        private static Half SameEndianness(Half value) => value;
     }
 }
