@@ -29,7 +29,7 @@ namespace lcms2dotnet.Icc
 
         public static Header Read(Stream stream)
         {
-            var logger = ICCProfile.logger;
+            var logger = Profile.logger;
 
             var headerBytes = new byte[sizeof(Header)];
             stream.Read(headerBytes, 0, sizeof(Header));
