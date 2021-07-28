@@ -5,6 +5,7 @@ namespace lcms2dotnet
 {
     public partial struct Signature
     {
+        internal const int SizeOf = sizeof(uint);
         private uint value;
 
         public static implicit operator Signature(uint value) => 

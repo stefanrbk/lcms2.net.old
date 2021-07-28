@@ -7,6 +7,8 @@ namespace lcms2dotnet
 {
     internal static class Endianness
     {
+        private delegate void Swab(Span<byte> span, int num);
+
         private static readonly Func<ulong, ulong> BigEndULong;
         private static readonly Func<uint, uint> BigEndUInt;
         private static readonly Func<ushort, ushort> BigEndUShort;
@@ -19,6 +21,9 @@ namespace lcms2dotnet
         private static readonly Func<double, double> LittleEndDouble;
         private static readonly Func<float, float> LittleEndSingle;
         private static readonly Func<Half, Half> LittleEndHalf;
+        private static readonly Swab swab16;
+        private static readonly Swab swab32;
+        private static readonly Swab swab64;
 
         public static ulong Big(ulong value) =>
             BigEndULong(value);
@@ -45,6 +50,13 @@ namespace lcms2dotnet
         public static Half Little(Half value) =>
             LittleEndHalf(value);
 
+        public static void Swab16(Span<byte> span, int num = 1) =>
+            swab16(span, num);
+        public static void Swab32(Span<byte> span, int num = 1) =>
+            swab32(span, num);
+        public static void Swab64(Span<byte> span, int num = 1) =>
+            swab64(span, num);
+
         static Endianness()
         {
             if (BitConverter.IsLittleEndian)
@@ -62,6 +74,10 @@ namespace lcms2dotnet
                 BigEndDouble = SwapEndianness;
                 BigEndSingle = SwapEndianness;
                 BigEndHalf = SwapEndianness;
+
+                swab16 = Swab16Swap;
+                swab32 = Swab32Swap;
+                swab64 = Swab64Swap;
             }
             else
             {
@@ -78,6 +94,10 @@ namespace lcms2dotnet
                 LittleEndDouble = SwapEndianness;
                 LittleEndSingle = SwapEndianness;
                 LittleEndHalf = SwapEndianness;
+
+                swab16 = SwabSame;
+                swab32 = SwabSame;
+                swab64 = SwabSame;
             }
         }
 
@@ -91,5 +111,40 @@ namespace lcms2dotnet
             var temp = BinaryPrimitives.ReverseEndianness(Unsafe.As<Half, ushort>(ref value));
             return Unsafe.As<ushort, Half>(ref temp);
         }
+        private static void Swab16Swap(Span<byte> span, int num)
+        {
+            byte tmp;
+
+            while (num > 0)
+            {
+                tmp = span[0]; span[0] = span[1]; span[1] = tmp;
+                span = span[2..]; num--;
+            }
+        }
+        private static void Swab32Swap(Span<byte> span, int num)
+        {
+            byte tmp;
+
+            while (num > 0)
+            {
+                tmp = span[0]; span[0] = span[3]; span[3] = tmp;
+                tmp = span[1]; span[1] = span[2]; span[2] = tmp;
+                span = span[4..]; num--;
+            }
+        }
+        private static void Swab64Swap(Span<byte> span, int num)
+        {
+            byte tmp;
+
+            while (num > 0)
+            {
+                tmp = span[0]; span[0] = span[7]; span[7] = tmp;
+                tmp = span[1]; span[1] = span[6]; span[6] = tmp;
+                tmp = span[2]; span[2] = span[5]; span[5] = tmp;
+                tmp = span[3]; span[3] = span[4]; span[4] = tmp;
+                span = span[8..]; num--;
+            }
+        }
+        private static void SwabSame(Span<byte> _0, int _1) { }
     }
 }

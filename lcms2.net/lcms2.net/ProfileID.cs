@@ -11,5 +11,12 @@ namespace lcms2dotnet
         public fixed ushort ID16[8];
         [FieldOffset(0)]
         public fixed uint ID32[4];
+
+        public enum SaveMethod
+        {
+            VersionBased,
+            AlwaysWrite,
+            NeverWrite,
+        }
     }
 }
